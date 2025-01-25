@@ -15,4 +15,39 @@ impl Pallet{
             balances: BTreeMap::new()
         }
     }
+
+	/// Set the balance of an account `who` to some `amount`.
+	pub fn set_balance(&mut self, who: &String, amount: u128) {
+		/* Insert `amount` into the BTreeMap under `who`. */
+		self.balances.insert(who.clone(), amount);
+	}
+
+	/// Get the balance of an account `who`.
+	/// If the account has no stored balance, we return zero.
+	pub fn balance(&self, who: &String) -> u128 {
+		/* Return the balance of `who`, returning zero if `None`. */
+		*self.balances.get(who).unwrap_or(&0)
+	}
+}
+
+#[cfg(test)]
+mod tests {
+	#[test]
+	fn init_balances() {
+
+        /* TODO: Create a mutable variable `balances`, which is a new instance of `Pallet`. */
+
+		/* TODO: Assert that the balance of `alice` starts at zero. */
+		/* TODO: Set the balance of `alice` to 100. */
+		/* TODO: Assert the balance of `alice` is now 100. */
+		/* TODO: Assert the balance of `bob` has not changed and is 0. */
+
+		let mut balances = super::Pallet::new();
+
+        assert_eq!(balances.balance(&"alice".to_string()), 0);
+        balances.set_balance(&"alice".to_string(), 100);
+        assert_eq!(balances.balance(&"alice".to_string()), 100);
+        assert_eq!(balances.balance(&"bob".to_string()), 0);
+	}
+
 }
