@@ -1,18 +1,23 @@
 use std::collections::BTreeMap;
 
-type AccountId = String;
-type Balance = u128;
+use num::traits::{CheckedAdd, CheckedSub, Zero};
+
+
 
 /// This is the Balances Module.
 /// It is a simple module which keeps track of how much balance each account has in this state
 /// machine.
 #[derive(Debug)]
-pub struct Pallet {
+pub struct Pallet<AccountId,Balance> {
     // A simple storage mapping from accounts (`String`) to their balances (`u128`).
     balances: BTreeMap<AccountId, Balance>
 }
 
-impl Pallet{
+impl<AccountId,Balance> Pallet<AccountId,Balance>
+where 
+	AccountId: Ord + Clone,
+	Balance: Zero + CheckedAdd + CheckedSub + Copy,
+{
     /// Create a new instance of the balances module.
     pub fn new() -> Self{
         Self {
@@ -30,7 +35,7 @@ impl Pallet{
 	/// If the account has no stored balance, we return zero.
 	pub fn balance(&self, who: &AccountId) -> Balance {
 		/* Return the balance of `who`, returning zero if `None`. */
-		*self.balances.get(who).unwrap_or(&0)
+		*self.balances.get(who).unwrap_or(&Balance::zero())
 	}
 
 	pub fn transfer(
@@ -53,8 +58,8 @@ impl Pallet{
         let caller_balance = self.balance(&caller);
 		let to_balance = self.balance(&to);
 
-		let new_caller_balance = caller_balance.checked_sub(amount).ok_or("Not enough funds.")?;
-		let new_to_balance = to_balance.checked_add(amount).ok_or("Overflow")?;
+		let new_caller_balance = caller_balance.checked_sub(&amount).ok_or("Not enough funds.")?;
+		let new_to_balance = to_balance.checked_add(&amount).ok_or("Overflow")?;
 
 		self.balances.insert(caller, new_caller_balance);
 		self.balances.insert(to, new_to_balance);
@@ -75,7 +80,7 @@ mod tests {
 		/* TODO: Assert the balance of `alice` is now 100. */
 		/* TODO: Assert the balance of `bob` has not changed and is 0. */
 
-		let mut balances = super::Pallet::new();
+		let mut balances = super::Pallet::<String, u128>::new();
 
         assert_eq!(balances.balance(&"alice".to_string()), 0);
         balances.set_balance(&"alice".to_string(), 100);
@@ -94,7 +99,7 @@ mod tests {
 			- That the balance of `alice` and `bob` is correctly updated.
 		*/
 
-        let mut balances = super::Pallet::new();
+        let mut balances = super::Pallet::<String, u128>::new();
 
 		assert_eq!(
 			balances.transfer("alice".to_string(), "bob".to_string(), 51),
